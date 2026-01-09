@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: fiap-soat-produtos
-        image: 280273007505.dkr.ecr.us-east-1.amazonaws.com/fiap-soat-produtos:latest
+        image: 972061217679.dkr.ecr.us-east-1.amazonaws.com/fiap-soat-produtos:latest
         imagePullPolicy: Always
         ports:
         - name: http
