@@ -1,25 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fiap-soat-application
+  name: fiap-soat-produtos
   namespace: fiap-soat-app
   labels:
-    app: fiap-soat-application
-    version: "1.0"
+    app: fiap-soat-produtos
+    service: produtos
 spec:
-  # Replicas gerenciado pelo HPA (hpa.yaml no repo fiap-soat-k8s-terraform)
   selector:
     matchLabels:
-      app: fiap-soat-application
+      app: fiap-soat-produtos
   template:
     metadata:
       labels:
-        app: fiap-soat-application
-        version: "1.0"
+        app: fiap-soat-produtos
+        service: produtos
     spec:
       containers:
-      - name: fiap-soat-application
-        image: 280273007505.dkr.ecr.us-east-1.amazonaws.com/fiap-soat-application:latest
+      - name: fiap-soat-produtos
+        image: 280273007505.dkr.ecr.us-east-1.amazonaws.com/fiap-soat-produtos:latest
         imagePullPolicy: Always
         ports:
         - name: http
@@ -49,9 +48,9 @@ spec:
         
         envFrom:
         - configMapRef:
-            name: fiap-soat-application-config
+            name: fiap-soat-produtos-config
         - secretRef:
-            name: fiap-soat-application-secrets
+            name: fiap-soat-produtos-secrets
         
         resources:
           requests:
