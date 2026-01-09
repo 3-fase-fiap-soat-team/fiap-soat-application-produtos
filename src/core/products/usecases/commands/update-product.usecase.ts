@@ -1,6 +1,5 @@
 import { Product } from '../../entities/product';
 import { ProductGateway } from '../../operation/gateways/product-gateway';
-import { CategoryGateway } from 'src/core/categories/operation/gateways/categories-gateway';
 
 export interface UpdateProductDTO {
   name?: string;
@@ -14,7 +13,6 @@ export interface UpdateProductDTO {
 export class UpdateProductUseCase {
   static async execute(
     productGateway: ProductGateway,
-    categoryGateway: CategoryGateway,
     id: string,
     updateData: UpdateProductDTO,
   ): Promise<Product> {
@@ -24,15 +22,6 @@ export class UpdateProductUseCase {
       throw new Error('Product not found');
     }
 
-    // Validar categoria se foi alterada
-    if (updateData.categoryId && updateData.categoryId !== product.categoryId) {
-      const category = await categoryGateway.findById(updateData.categoryId);
-      if (!category) {
-        throw new Error('Category not found');
-      }
-    }
-
-    // Atualizar campos se fornecidos
     if (updateData.name !== undefined) {
       product.changeName(updateData.name);
     }

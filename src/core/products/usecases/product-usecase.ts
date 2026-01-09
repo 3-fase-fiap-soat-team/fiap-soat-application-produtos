@@ -1,7 +1,6 @@
 import { NewProductDTO } from 'src/core/common/dtos/new-product.dto';
 import { Product } from '../entities/product';
 import { ProductGateway } from '../operation/gateways/product-gateway';
-import { CategoryGateway } from 'src/core/categories/operation/gateways/categories-gateway';
 import { ProductFactory } from '../entities/factories/product.factory';
 
 // Commands
@@ -42,20 +41,18 @@ export class ProductUseCase {
   // Command operations
   static async save(
     product: NewProductDTO,
-    categoryGateway: CategoryGateway,
     productGateway: ProductGateway,
     factory: ProductFactory,
   ): Promise<Product> {
-    return CreateProductUseCase.execute(product, categoryGateway, productGateway, factory);
+    return CreateProductUseCase.execute(product, productGateway, factory);
   }
 
   static async update(
     productGateway: ProductGateway,
-    categoryGateway: CategoryGateway,
     id: string,
     updateData: UpdateProductDTO,
   ): Promise<Product> {
-    return UpdateProductUseCase.execute(productGateway, categoryGateway, id, updateData);
+    return UpdateProductUseCase.execute(productGateway, id, updateData);
   }
 
   static async delete(productGateway: ProductGateway, id: string): Promise<void> {

@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './external/database/database.module';
+import { DynamoModule } from './external/database/dynamo.module';
 import { ApiModule } from './external/api/api.module';
-import { ProvidersModule } from './external/providers/providers.module';
+
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    DatabaseModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    DynamoModule,
     ApiModule,
   ],
   controllers: [],

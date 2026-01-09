@@ -6,7 +6,6 @@ export class ProductMapper {
   static toDomain(productEntity: ProductEntity): Product {
     const productStock = new ProductStock(productEntity.stock);
     
-    // Convert JSON image object to string if it exists
     let imageString = '';
     if (productEntity.image && typeof productEntity.image === 'object') {
       const imageObj = productEntity.image as { url: string; alt: string };

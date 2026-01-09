@@ -18,14 +18,12 @@ import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
 import { ProductIdDTO } from 'src/core/common/dtos/product-id.dto';
 import { IProductDataSource } from 'src/interfaces/product-datasource';
-import { ICategoryDataSource } from 'src/interfaces/category-datasource';
 import { IdGenerator } from 'src/interfaces/id-generator';
 
 @Controller('products')
 export class NestJSProductsController {
   constructor(
     private readonly productDataSource: IProductDataSource,
-    private readonly categoryDataSource: ICategoryDataSource,
     private readonly idGenerator: IdGenerator,
   ) {}
 
@@ -100,7 +98,7 @@ export class NestJSProductsController {
     try {
       return await ProductController.save(
         createProductDto,
-        this.categoryDataSource,
+        // this.categoryDataSource,
         this.productDataSource,
         this.idGenerator
       );
@@ -133,7 +131,7 @@ export class NestJSProductsController {
       return await ProductController.update(
         id,
         updateProductDto,
-        this.categoryDataSource,
+        // this.categoryDataSource,
         this.productDataSource
       );
     } catch (error) {
