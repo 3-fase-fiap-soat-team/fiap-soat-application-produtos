@@ -19,12 +19,14 @@ import { UpdateProductDto } from '../dtos/update-product.dto';
 import { ProductIdDTO } from 'src/core/common/dtos/product-id.dto';
 import { IProductDataSource } from 'src/interfaces/product-datasource';
 import { IdGenerator } from 'src/interfaces/id-generator';
+import { ICategoryClient } from 'src/interfaces/category-client.interface';
 
 @Controller('products')
 export class NestJSProductsController {
   constructor(
     private readonly productDataSource: IProductDataSource,
     private readonly idGenerator: IdGenerator,
+    private readonly categoryClient: ICategoryClient,
   ) {}
 
   @Get()
@@ -64,7 +66,11 @@ export class NestJSProductsController {
   })
   async findById(@Param('id') id: string) {
     try {
-      const product = await ProductController.findById(id, this.productDataSource);
+      const product = await ProductController.findById(
+        id, 
+        this.productDataSource,
+        this.categoryClient
+      );
       
       if (!product) {
         throw new NotFoundException('Produto não encontrado');
