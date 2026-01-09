@@ -858,3 +858,4 @@ openssl s_client -connect your-rds-endpoint:5432 -starttls postgres
 - ✅ **Credenciais via** arquivos .env (desenvolvimento)
 - 🔄 **TODO**: Migrar para AWS Secrets Manager (produção)
 
+# Trigger workflow
