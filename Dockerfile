@@ -1,3 +1,4 @@
+# Deploy timestamp: Fri Jan  9 00:06:18 -03 2026
 # Microserviço Produtos - FIAP SOAT
 # Use the official Node.js image as the base image
 FROM node:20
