@@ -168,6 +168,9 @@ Pipeline automatizado com GitHub Actions:
 4. Deploy no EKS
 5. Rollout monitorado
 
+## Evidência de execução dos testes
+<img width="1890" height="1030" alt="image" src="https://github.com/user-attachments/assets/d2f763d9-e992-4215-8631-fe928360df33" />
+
 ---
 
 ## 🧠 Observações Importantes
