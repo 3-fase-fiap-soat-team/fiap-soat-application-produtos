@@ -20,7 +20,6 @@ export class Products1746828262980 implements MigrationInterface {
             );
         `);
 
-        // Inserindo produtos de exemplo
         await queryRunner.query(`
             INSERT INTO products (id, name, description, price, category_id, stock, created_at, updated_at) VALUES
             -- Lanches

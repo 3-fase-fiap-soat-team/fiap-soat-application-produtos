@@ -8,7 +8,6 @@ export class UpdateProductImage1747745767269 implements MigrationInterface {
             ADD COLUMN image jsonb DEFAULT NULL
         `);
 
-        // Add sample data using simple approach
         const imageData = [
             { id: 'd79e7d79-c087-4597-8c02-304bbf83b407', url: 'https://tech-challenge-fiap-pethraf.s3.sa-east-1.amazonaws.com/img/x-burger.jpg', alt: 'X-Burger' },
             { id: '9d9419e1-aab3-4e70-bccb-9f92f7b89653', url: 'https://tech-challenge-fiap-pethraf.s3.sa-east-1.amazonaws.com/img/x-bacon.jpg', alt: 'X-Bacon' },

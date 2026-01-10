@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fiap-soat-produtos-config
+  namespace: fiap-soat-app
+  labels:
+    app: fiap-soat-produtos
+    service: produtos
+data:
+  NODE_ENV: "production"
+  AWS_REGION: "us-east-1"
+  DYNAMODB_TABLE_PRODUCTS: "fiap-soat-dev-products"
+  PORT: "3000"
+  CATEGORIAS_SERVICE_URL: "http://fiap-soat-categorias.fiap-soat-app.svc.cluster.local:3000"

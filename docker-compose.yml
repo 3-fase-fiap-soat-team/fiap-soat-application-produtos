@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env.rds
+      - .env.local
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -15,7 +15,30 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    depends_on:
+      - dynamodb
+    environment:
+      DYNAMODB_ENDPOINT: http://dynamodb:8000
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: soat_dynamodb
+    ports:
+      - "8000:8000"
+    command: -jar DynamoDBLocal.jar -inMemory -sharedDb
+    volumes:
+      - dynamo_local_data:/home/dynamodblocal/data
+
+  dynamodb-init:
+    image: amazon/aws-cli:latest
+    depends_on:
+      - dynamodb
+    entrypoint: ["/bin/sh", "-c"]
+    command: "/bin/sh -c \"until curl -sS http://dynamodb:8000/; do echo 'waiting for dynamodb'; sleep 1; done; aws dynamodb create-table --table-name ProductsTable --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=sk,AttributeType=S AttributeName=entity,AttributeType=S AttributeName=categoryId,AttributeType=S --key-schema AttributeName=pk,KeyType=HASH AttributeName=sk,KeyType=RANGE --global-secondary-indexes '[{\\\"IndexName\\\":\\\"entity-index\\\",\\\"KeySchema\\\":[{\\\"AttributeName\\\":\\\"entity\\\",\\\"KeyType\\\":\\\"HASH\\\"}],\\\"Projection\\\":{\\\"ProjectionType\\\":\\\"ALL\\\"},\\\"ProvisionedThroughput\\\":{\\\"ReadCapacityUnits\\\":5,\\\"WriteCapacityUnits\\\":5}},{\\\"IndexName\\\":\\\"gsi_category\\\",\\\"KeySchema\\\":[{\\\"AttributeName\\\":\\\"categoryId\\\",\\\"KeyType\\\":\\\"HASH\\\"}],\\\"Projection\\\":{\\\"ProjectionType\\\":\\\"ALL\\\"},\\\"ProvisionedThroughput\\\":{\\\"ReadCapacityUnits\\\":5,\\\"WriteCapacityUnits\\\":5}}]' --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --endpoint-url http://dynamodb:8000 || true\""
 
 networks:
   default:
     driver: bridge
+
+volumes:
+  dynamo_local_data:
