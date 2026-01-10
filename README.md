@@ -858,3 +858,6 @@ openssl s_client -connect your-rds-endpoint:5432 -starttls postgres
 - ✅ **Credenciais via** arquivos .env (desenvolvimento)
 - 🔄 **TODO**: Migrar para AWS Secrets Manager (produção)
 
+## Evidência de execução dos testes
+<img width="1890" height="1030" alt="image" src="https://github.com/user-attachments/assets/83d5edc1-fc29-40eb-b9c7-21890124d093" />
+
