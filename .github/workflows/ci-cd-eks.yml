@@ -29,33 +29,40 @@ jobs:
   test:
     name: 🧪 Run Tests
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '18'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linting
-        run: npm run lint || echo "⚠️  Lint falhou, mas continuando..."
-        continue-on-error: true
+      - name: Run unit tests & generate LCOV
+        run: npm run test:cov:lcov
 
-      - name: Run unit tests
-        run: npm run test || echo "⚠️  Testes falharam, mas continuando..."
-        continue-on-error: true
+      - name: Check coverage thresholds
+        # Will fail the job when coverage is below configured thresholds
+        run: node ./scripts/check-coverage.js --statements 70 --lines 70
 
-      - name: Build application
-        run: npm run build
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov
+          path: coverage/lcov.info
   
   sonar:
+    name: 🔍 SonarQube Scan
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
