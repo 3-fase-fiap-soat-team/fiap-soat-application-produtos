@@ -89,7 +89,7 @@
       "!**/*.spec.ts",
       "!test/**"
     ],
-    "coverageReporters": ["lcov", "text", "text-summary"],
+    "coverageReporters": ["lcov", "text", "json-summary"],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
       "global": {
