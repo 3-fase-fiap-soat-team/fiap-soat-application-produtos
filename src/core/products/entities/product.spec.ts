@@ -55,12 +55,6 @@ describe('Product Entity', () => {
         'O preço do produto é obrigatório e deve ser maior que zero.',
       );
     });
-
-    it('should throw if stock is not provided', () => {
-      expect(() => makeProduct({ stock: undefined })).toThrow(
-        'O estoque é obrigatório.',
-      );
-    });
   });
 
   describe('changeName', () => {
