@@ -1,73 +1,231 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { NestJSProductsController } from './nestjs-products.controller';
 import { ProductController } from 'src/core/products/operation/controllers/product-controller';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { IProductDataSource } from 'src/interfaces/product-datasource';
+import { IdGenerator } from 'src/interfaces/id-generator';
+import { ICategoryClient } from 'src/interfaces/category-client.interface';
+
+jest.mock('src/core/products/operation/controllers/product-controller');
 
 describe('NestJSProductsController', () => {
-  const mockProductDataSource: any = {};
-  const mockCategoryDataSource: any = {};
-  const mockIdGenerator: any = { generate: jest.fn().mockReturnValue('gen-id') };
-
   let controller: NestJSProductsController;
+  let productDataSource: jest.Mocked<IProductDataSource>;
+  let idGenerator: jest.Mocked<IdGenerator>;
+  let categoryClient: jest.Mocked<ICategoryClient>;
 
   beforeEach(() => {
-    controller = new NestJSProductsController(mockProductDataSource, mockCategoryDataSource, mockIdGenerator);
-    jest.restoreAllMocks();
+    productDataSource = {} as any;
+    idGenerator = { generate: jest.fn() } as any;
+    categoryClient = {} as any;
+
+    controller = new NestJSProductsController(
+      productDataSource,
+      idGenerator,
+      categoryClient,
+    );
   });
 
-  it('should call findAll when no categoryId', async () => {
-    jest.spyOn(ProductController, 'findAll').mockResolvedValue([{ id: 'p1' } as any]);
-
-    const res = await controller.findAll();
-
-    expect(ProductController.findAll).toHaveBeenCalled();
-    expect(res[0].id).toBe('p1');
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('should call findByCategory when categoryId provided', async () => {
-    jest.spyOn(ProductController, 'findByCategory').mockResolvedValue([{ id: 'p2' } as any]);
+  describe('findAll', () => {
+    it('should return all products when no categoryId is provided', async () => {
+      const result = [{}];
+      jest.spyOn(ProductController, 'findAll').mockResolvedValue(result as any);
 
-    const res = await controller.findAll('cat-1');
+      const response = await controller.findAll();
 
-    expect(ProductController.findByCategory).toHaveBeenCalledWith('cat-1', mockProductDataSource);
-    expect(res[0].id).toBe('p2');
+      expect(ProductController.findAll).toHaveBeenCalledWith(productDataSource);
+      expect(response).toBe(result);
+    });
+
+    it('should return products by category when categoryId is provided', async () => {
+      const result = [{}];
+      jest.spyOn(ProductController, 'findByCategory').mockResolvedValue(result as any);
+
+      const response = await controller.findAll('category-id');
+
+      expect(ProductController.findByCategory).toHaveBeenCalledWith(
+        'category-id',
+        productDataSource,
+      );
+      expect(response).toBe(result);
+    });
+
+    it('should throw BadRequestException on error', async () => {
+      jest
+        .spyOn(ProductController, 'findAll')
+        .mockRejectedValue(new Error('error'));
+
+      await expect(controller.findAll()).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
   });
 
-  it('should return product by id or throw NotFound', async () => {
-    jest.spyOn(ProductController, 'findById').mockResolvedValue({ id: 'p3' } as any);
+  describe('findById', () => {
+    it('should return product when found', async () => {
+      const product = {};
+      jest
+        .spyOn(ProductController, 'findById')
+        .mockResolvedValue(product as any);
 
-    const res = await controller.findById('p3');
-    expect(res.id).toBe('p3');
+      const response = await controller.findById('id');
 
-    jest.spyOn(ProductController, 'findById').mockResolvedValue(null as any);
-    await expect(controller.findById('missing')).rejects.toThrow(NotFoundException);
+      expect(ProductController.findById).toHaveBeenCalledWith(
+        'id',
+        productDataSource,
+        categoryClient,
+      );
+      expect(response).toBe(product);
+    });
+
+    it('should throw NotFoundException when product is null', async () => {
+      jest
+        .spyOn(ProductController, 'findById')
+        .mockResolvedValue(null);
+
+      await expect(controller.findById('id')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it('should rethrow NotFoundException', async () => {
+      jest
+        .spyOn(ProductController, 'findById')
+        .mockRejectedValue(new NotFoundException());
+
+      await expect(controller.findById('id')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it('should throw BadRequestException for generic errors', async () => {
+      jest
+        .spyOn(ProductController, 'findById')
+        .mockRejectedValue(new Error('error'));
+
+      await expect(controller.findById('id')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
   });
 
-  it('should create a product and handle Category not found', async () => {
-    jest.spyOn(ProductController, 'save').mockResolvedValue({ id: 'new' } as any);
+  describe('create', () => {
+    it('should create a product successfully', async () => {
+      const dto = {} as any;
+      const result = { id: 'id' };
 
-    const res = await controller.create({} as any);
-    expect(res.id).toBe('new');
+      jest.spyOn(ProductController, 'save').mockResolvedValue(result as any);
 
-    jest.spyOn(ProductController, 'save').mockRejectedValue(new Error('Category not found'));
-    await expect(controller.create({} as any)).rejects.toThrow(NotFoundException);
+      const response = await controller.create(dto);
+
+      expect(ProductController.save).toHaveBeenCalledWith(
+        dto,
+        productDataSource,
+        idGenerator,
+      );
+      expect(response).toBe(result);
+    });
+
+    it('should throw NotFoundException when category is not found', async () => {
+      jest
+        .spyOn(ProductController, 'save')
+        .mockRejectedValue(new Error('Category not found'));
+
+      await expect(controller.create({} as any)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it('should throw BadRequestException for other errors', async () => {
+      jest
+        .spyOn(ProductController, 'save')
+        .mockRejectedValue(new Error('error'));
+
+      await expect(controller.create({} as any)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
   });
 
-  it('should update and handle not found', async () => {
-    jest.spyOn(ProductController, 'update').mockResolvedValue({ id: 'u1' } as any);
+  describe('update', () => {
+    it('should update product successfully', async () => {
+      const result = {};
+      jest.spyOn(ProductController, 'update').mockResolvedValue(result as any);
 
-    const res = await controller.update('id', {} as any);
-    expect(res.id).toBe('u1');
+      const response = await controller.update('id', {} as any);
 
-    jest.spyOn(ProductController, 'update').mockRejectedValue(new Error('Product not found'));
-    await expect(controller.update('id', {} as any)).rejects.toThrow(NotFoundException);
+      expect(ProductController.update).toHaveBeenCalledWith(
+        'id',
+        {},
+        productDataSource,
+      );
+      expect(response).toBe(result);
+    });
+
+    it('should throw NotFoundException when product not found', async () => {
+      jest
+        .spyOn(ProductController, 'update')
+        .mockRejectedValue(new Error('Product not found'));
+
+      await expect(
+        controller.update('id', {} as any),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('should throw NotFoundException when category not found', async () => {
+      jest
+        .spyOn(ProductController, 'update')
+        .mockRejectedValue(new Error('Category not found'));
+
+      await expect(
+        controller.update('id', {} as any),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('should throw BadRequestException for generic errors', async () => {
+      jest
+        .spyOn(ProductController, 'update')
+        .mockRejectedValue(new Error('error'));
+
+      await expect(
+        controller.update('id', {} as any),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
   });
 
-  it('should remove and handle not found', async () => {
-    jest.spyOn(ProductController, 'delete').mockResolvedValue(undefined);
+  describe('remove', () => {
+    it('should delete product successfully', async () => {
+      jest.spyOn(ProductController, 'delete').mockResolvedValue(undefined);
 
-    await expect(controller.remove('id')).resolves.toBeUndefined();
+      await controller.remove('id');
 
-    jest.spyOn(ProductController, 'delete').mockRejectedValue(new Error('Product not found'));
-    await expect(controller.remove('id')).rejects.toThrow(NotFoundException);
+      expect(ProductController.delete).toHaveBeenCalledWith(
+        'id',
+        productDataSource,
+      );
+    });
+
+    it('should throw NotFoundException when product not found', async () => {
+      jest
+        .spyOn(ProductController, 'delete')
+        .mockRejectedValue(new Error('Product not found'));
+
+      await expect(controller.remove('id')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it('should throw BadRequestException for generic errors', async () => {
+      jest
+        .spyOn(ProductController, 'delete')
+        .mockRejectedValue(new Error('error'));
+
+      await expect(controller.remove('id')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
   });
 });
