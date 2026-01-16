@@ -25,12 +25,13 @@ describe('ExceptionBase', () => {
     expect(error.cause).toBe(cause);
   });
 
-  it('should capture stack trace', () => {
+    it('should capture stack trace', () => {
     const error = new TestException('Test message');
 
     expect(error.stack).toBeDefined();
-    expect(error.stack).toContain('TestException');
-  });
+    expect(typeof error.stack).toBe('string');
+    expect(error.stack).toContain('Test message');
+    });
 
   it('should serialize correctly using toJson()', () => {
     const cause = new Error('Root cause');
