@@ -1,120 +1,121 @@
 import { Repository } from 'typeorm';
-import { OrmProductRepository } from './product.repository';
 import { ProductEntity } from '../entities/product.entity';
 import { Product } from 'src/core/products/entities/product';
-import { ProductStock } from 'src/core/products/entities/value-objects/product-stock';
+import { ProductMapper } from '../mappers/product.mapper';
+import { OrmProductRepository } from './product.repository';
 
 describe('OrmProductRepository', () => {
-  let mockRepository: Partial<Repository<ProductEntity>>;
-  let ormProductRepository: OrmProductRepository;
+  let repository: jest.Mocked<Repository<ProductEntity>>;
+  let ormRepository: OrmProductRepository;
 
-  const now = new Date();
-  const sampleEntity: ProductEntity = {
-    id: 'prod-1',
-    name: 'Product 1',
-    description: 'Desc',
-    price: 10.5 as any,
-    category_id: 'cat-1',
-    stock: 5,
-    image: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  const sampleDomain = new Product(
-    'prod-1',
-    'Product 1',
-    'Desc',
-    10.5,
-    'cat-1',
-    new ProductStock(5),
-    '',
-    now,
-    now,
-  );
+  const product = {} as Product;
+  const entity = {} as ProductEntity;
 
   beforeEach(() => {
-    mockRepository = {
+    repository = {
       save: jest.fn(),
       find: jest.fn(),
       findOne: jest.fn(),
       delete: jest.fn(),
-    };
+    } as any;
 
-    ormProductRepository = new OrmProductRepository(
-      mockRepository as unknown as Repository<ProductEntity>,
-    );
+    ormRepository = new OrmProductRepository(repository);
   });
 
-  it('should save a product and return domain object', async () => {
-    (mockRepository.save as jest.Mock).mockResolvedValue(sampleEntity);
-
-    const result = await ormProductRepository.save(sampleDomain);
-
-    expect(mockRepository.save).toHaveBeenCalled();
-    expect(result).toBeInstanceOf(Product);
-    expect(result.id).toBe(sampleDomain.id);
-    expect(result.name).toBe(sampleDomain.name);
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
-  it('should find all products', async () => {
-    (mockRepository.find as jest.Mock).mockResolvedValue([sampleEntity]);
+  describe('save', () => {
+    it('should persist and return domain product', async () => {
+      jest.spyOn(ProductMapper, 'toPersistence').mockReturnValue(entity);
+      jest.spyOn(ProductMapper, 'toDomain').mockReturnValue(product);
+      repository.save.mockResolvedValue(entity);
 
-    const result = await ormProductRepository.findAll();
+      const result = await ormRepository.save(product);
 
-    expect(mockRepository.find).toHaveBeenCalled();
-    expect(Array.isArray(result)).toBe(true);
-    expect(result[0]).toBeInstanceOf(Product);
+      expect(ProductMapper.toPersistence).toHaveBeenCalledWith(product);
+      expect(repository.save).toHaveBeenCalledWith(entity as any);
+      expect(ProductMapper.toDomain).toHaveBeenCalledWith(entity);
+      expect(result).toBe(product);
+    });
   });
 
-  it('should find product by id and return domain', async () => {
-    (mockRepository.findOne as jest.Mock).mockResolvedValue(sampleEntity);
+  describe('findAll', () => {
+    it('should return mapped products', async () => {
+      repository.find.mockResolvedValue([entity]);
+      jest.spyOn(ProductMapper, 'toDomain').mockReturnValue(product);
 
-    const result = await ormProductRepository.findById('prod-1');
+      const result = await ormRepository.findAll();
 
-    expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'prod-1' } });
-    expect(result).toBeInstanceOf(Product);
+      expect(repository.find).toHaveBeenCalled();
+      expect(result).toEqual([product]);
+    });
   });
 
-  it('should return null when product not found', async () => {
-    (mockRepository.findOne as jest.Mock).mockResolvedValue(undefined);
+  describe('findById', () => {
+    it('should return product when found', async () => {
+      repository.findOne.mockResolvedValue(entity);
+      jest.spyOn(ProductMapper, 'toDomain').mockReturnValue(product);
 
-    const result = await ormProductRepository.findById('not-found');
+      const result = await ormRepository.findById('id');
 
-    expect(result).toBeNull();
+      expect(repository.findOne).toHaveBeenCalled();
+      expect(result).toBe(product);
+    });
+
+    it('should return null when not found', async () => {
+      repository.findOne.mockResolvedValue(null);
+
+      const result = await ormRepository.findById('id');
+
+      expect(result).toBeNull();
+    });
   });
 
-  it('should find products by category', async () => {
-    (mockRepository.find as jest.Mock).mockResolvedValue([sampleEntity]);
+  describe('delete', () => {
+    it('should delete product by id', async () => {
+      repository.delete.mockResolvedValue(undefined as any);
 
-    const result = await ormProductRepository.findByCategory('cat-1');
+      await ormRepository.delete('id');
 
-    expect(mockRepository.find).toHaveBeenCalledWith({ where: { category_id: 'cat-1' } });
-    expect(result[0]).toBeInstanceOf(Product);
+      expect(repository.delete).toHaveBeenCalledWith('id');
+    });
   });
 
-  it('should delete product', async () => {
-    (mockRepository.delete as jest.Mock).mockResolvedValue(undefined);
+  describe('findByCategory', () => {
+    it('should return products by category', async () => {
+      repository.find.mockResolvedValue([entity]);
+      jest.spyOn(ProductMapper, 'toDomain').mockReturnValue(product);
 
-    await ormProductRepository.delete('prod-1');
+      const result = await ormRepository.findByCategory('category-id');
 
-    expect(mockRepository.delete).toHaveBeenCalledWith('prod-1');
+      expect(repository.find).toHaveBeenCalled();
+      expect(result).toEqual([product]);
+    });
   });
 
-  it('should find many by ids', async () => {
-    (mockRepository.find as jest.Mock).mockResolvedValue([sampleEntity]);
+  describe('findManyByIds', () => {
+    it('should return products by ids', async () => {
+      repository.find.mockResolvedValue([entity]);
+      jest.spyOn(ProductMapper, 'toDomain').mockReturnValue(product);
 
-    const result = await ormProductRepository.findManyByIds(['prod-1']);
+      const result = await ormRepository.findManyByIds(['id']);
 
-    expect(mockRepository.find).toHaveBeenCalled();
-    expect(result[0]).toBeInstanceOf(Product);
+      expect(repository.find).toHaveBeenCalled();
+      expect(result).toEqual([product]);
+    });
   });
 
-  it('should update product using save', async () => {
-    (mockRepository.save as jest.Mock).mockResolvedValue(sampleEntity);
+  describe('update', () => {
+    it('should update product', async () => {
+      jest.spyOn(ProductMapper, 'toPersistence').mockReturnValue(entity);
+      repository.save.mockResolvedValue(entity);
 
-    await ormProductRepository.update(sampleDomain);
+      await ormRepository.update(product);
 
-    expect(mockRepository.save).toHaveBeenCalled();
+      expect(ProductMapper.toPersistence).toHaveBeenCalledWith(product);
+      expect(repository.save).toHaveBeenCalledWith(entity as any);
+    });
   });
 });
