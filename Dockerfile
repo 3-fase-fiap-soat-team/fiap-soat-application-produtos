@@ -1,3 +1,5 @@
+# Deploy timestamp: Fri Jan  9 00:06:18 -03 2026
+# Microserviço Produtos - FIAP SOAT
 # Use the official Node.js image as the base image
 FROM node:20
 
@@ -16,19 +18,12 @@ RUN npm install
 # Copy the rest of the application files
 COPY . .
 
-# Make start script executable
-RUN chmod +x start.sh
-
 # Build the NestJS application
 RUN npm run build
 
-# Copy migrations and config to dist folder for production
-RUN cp -r migrations dist/
-RUN cp typeorm-cli.config.* dist/ 2>/dev/null || true
-
-# Verify build output and migrations
-RUN ls -la dist/
-RUN ls -la dist/migrations/ || echo "Migrations directory not found"
+# Copy start script that runs the application
+COPY start.sh ./
+RUN chmod +x start.sh
 
 # Expose the application port
 EXPOSE 3000

@@ -6,6 +6,7 @@ import { ProductIdPresenter } from '../presenters/product-id-presenter';
 import { NewProductDTO } from 'src/core/common/dtos/new-product.dto';
 import { ProductFactory } from '../../entities/factories/product.factory';
 import { IdGenerator } from 'src/interfaces/id-generator';
+import { ICategoryClient } from 'src/interfaces/category-client.interface';
 
 export class ProductController {
   static async findAll(dataSource: IProductDataSource) {
@@ -14,12 +15,22 @@ export class ProductController {
     return ProductPresenter.toDTO(products);
   }
 
-  static async findById(id: string, dataSource: IProductDataSource) {
+  static async findById(
+    id: string, 
+    dataSource: IProductDataSource,
+    categoryClient?: ICategoryClient
+  ) {
     const productGateway = new ProductGateway(dataSource);
     const product = await ProductUseCase.findById(productGateway, id);
     
     if (!product) {
       return null;
+    }
+
+    // Se categoryClient foi fornecido, busca o nome da categoria
+    if (categoryClient && product.categoryId) {
+      const category = await categoryClient.findById(product.categoryId);
+      return ProductPresenter.toDTOWithCategory(product, category?.name || null);
     }
     
     return ProductPresenter.toDTO([product])[0];

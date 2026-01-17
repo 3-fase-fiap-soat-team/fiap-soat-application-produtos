@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { IProductDataSource } from 'src/interfaces/product-datasource';
 import { Product } from 'src/core/products/entities/product';
 import { ProductStock } from 'src/core/products/entities/value-objects/product-stock';
@@ -33,10 +33,9 @@ export class DynamoProductRepository implements IProductDataSource {
 
   async findAll(): Promise<Product[]> {
     const res: any = await this.ddb.send(
-      new QueryCommand({
+      new ScanCommand({
         TableName: this.table,
-        IndexName: 'entity-index',
-        KeyConditionExpression: 'entity = :e',
+        FilterExpression: 'entity = :e',
         ExpressionAttributeValues: { ':e': 'product' },
       })
     );

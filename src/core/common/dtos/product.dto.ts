@@ -4,5 +4,7 @@ export class ProductDTO {
     description:string;
     price: number;
     stock: number;
-    image: string
+    image: string;
+    categoryId?: string;
+    categoryName?: string;
 }

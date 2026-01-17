@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiap-soat-produtos-service
+  namespace: fiap-soat-app
+  labels:
+    app: fiap-soat-produtos
+    service: produtos
+spec:
+  type: LoadBalancer
+  selector:
+    app: fiap-soat-produtos
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 3000

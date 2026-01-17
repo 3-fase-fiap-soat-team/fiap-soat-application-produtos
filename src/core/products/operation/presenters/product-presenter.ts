@@ -17,4 +17,18 @@ export class ProductPresenter {
       return [];
     }
   }
+
+  static toDTOWithCategory(product: Product, categoryName: string | null): ProductDTO {
+    return {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock.value,
+      image: product.image,
+      categoryId: product.categoryId,
+      categoryName: categoryName || undefined,
+    };
+  }
 }
+

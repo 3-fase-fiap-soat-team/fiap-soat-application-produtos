@@ -1,223 +1,184 @@
 import { Product } from './product';
 import { ProductStock } from './value-objects/product-stock';
 
-describe('Product Domain Entity', () => {
-  const validProductData = {
-    id: '123e4567-e89b-12d3-a456-426614174000',
-    name: 'Test Product',
-    description: 'Test Description',
-    price: 99.99,
-    categoryId: 'category-123',
-    stock: new ProductStock(10),
-    image: 'https://example.com/image.jpg',
-    createdAt: new Date(),
-    updatedAt: new Date(),
+describe('Product Entity', () => {
+  const validStock = new ProductStock(10);
+  const baseDate = new Date('2024-01-01');
+
+  const makeProduct = (overrides?: Partial<Product>) => {
+    return new Product(
+      'product-id',
+      overrides?.name ?? 'Product name',
+      overrides?.description ?? 'Product description',
+      overrides?.price ?? 100,
+      overrides?.categoryId ?? 'category-id',
+      overrides?.stock ?? validStock,
+      overrides?.image ?? 'image.png',
+      overrides?.createdAt ?? baseDate,
+      overrides?.updatedAt ?? baseDate,
+    );
   };
 
-  describe('constructor', () => {
-    it('deve criar um produto válido', () => {
-      const product = new Product(
-        validProductData.id,
-        validProductData.name,
-        validProductData.description,
-        validProductData.price,
-        validProductData.categoryId,
-        validProductData.stock,
-        validProductData.image,
-        validProductData.createdAt,
-        validProductData.updatedAt,
+  describe('constructor validation', () => {
+    it('should create a valid product', () => {
+      const product = makeProduct();
+
+      expect(product).toBeInstanceOf(Product);
+      expect(product.name).toBe('Product name');
+      expect(product.price).toBe(100);
+    });
+
+    it('should throw if name is empty', () => {
+      expect(() => makeProduct({ name: '' })).toThrow(
+        'O nome do produto é obrigatório.',
+      );
+    });
+
+    it('should throw if description is empty', () => {
+      expect(() => makeProduct({ description: '' })).toThrow(
+        'A descrição do produto é obrigatória.',
+      );
+    });
+
+    it('should throw if categoryId is empty', () => {
+      expect(() => makeProduct({ categoryId: '' })).toThrow(
+        'O ID da categoria é obrigatório.',
+      );
+    });
+
+    it('should throw if price is zero or negative', () => {
+      expect(() => makeProduct({ price: 0 })).toThrow(
+        'O preço do produto é obrigatório e deve ser maior que zero.',
       );
 
-      expect(product.id).toBe(validProductData.id);
-      expect(product.name).toBe(validProductData.name);
-      expect(product.description).toBe(validProductData.description);
-      expect(product.price).toBe(validProductData.price);
-      expect(product.categoryId).toBe(validProductData.categoryId);
-      expect(product.stock).toBe(validProductData.stock);
-      expect(product.image).toBe(validProductData.image);
-      expect(product.createdAt).toBe(validProductData.createdAt);
-      expect(product.updatedAt).toBe(validProductData.updatedAt);
-    });
-
-    it('deve lançar erro quando nome está vazio', () => {
-      expect(() => {
-        new Product(
-          validProductData.id,
-          '',
-          validProductData.description,
-          validProductData.price,
-          validProductData.categoryId,
-          validProductData.stock,
-          validProductData.image,
-          validProductData.createdAt,
-          validProductData.updatedAt,
-        );
-      }).toThrow('O nome do produto é obrigatório.');
-    });
-
-    it('deve lançar erro quando descrição está vazia', () => {
-      expect(() => {
-        new Product(
-          validProductData.id,
-          validProductData.name,
-          '',
-          validProductData.price,
-          validProductData.categoryId,
-          validProductData.stock,
-          validProductData.image,
-          validProductData.createdAt,
-          validProductData.updatedAt,
-        );
-      }).toThrow('A descrição do produto é obrigatória.');
-    });
-
-    it('deve lançar erro quando preço é zero ou negativo', () => {
-      expect(() => {
-        new Product(
-          validProductData.id,
-          validProductData.name,
-          validProductData.description,
-          0,
-          validProductData.categoryId,
-          validProductData.stock,
-          validProductData.image,
-          validProductData.createdAt,
-          validProductData.updatedAt,
-        );
-      }).toThrow('O preço do produto é obrigatório e deve ser maior que zero.');
-
-      expect(() => {
-        new Product(
-          validProductData.id,
-          validProductData.name,
-          validProductData.description,
-          -10,
-          validProductData.categoryId,
-          validProductData.stock,
-          validProductData.image,
-          validProductData.createdAt,
-          validProductData.updatedAt,
-        );
-      }).toThrow('O preço do produto é obrigatório e deve ser maior que zero.');
-    });
-
-    it('deve lançar erro quando categoryId está vazio', () => {
-      expect(() => {
-        new Product(
-          validProductData.id,
-          validProductData.name,
-          validProductData.description,
-          validProductData.price,
-          '',
-          validProductData.stock,
-          validProductData.image,
-          validProductData.createdAt,
-          validProductData.updatedAt,
-        );
-      }).toThrow('O ID da categoria é obrigatório.');
-    });
-
-    it('deve lançar erro quando estoque é nulo', () => {
-      expect(() => {
-        new Product(
-          validProductData.id,
-          validProductData.name,
-          validProductData.description,
-          validProductData.price,
-          validProductData.categoryId,
-          null as any,
-          validProductData.image,
-          validProductData.createdAt,
-          validProductData.updatedAt,
-        );
-      }).toThrow('O estoque é obrigatório.');
+      expect(() => makeProduct({ price: -1 })).toThrow(
+        'O preço do produto é obrigatório e deve ser maior que zero.',
+      );
     });
   });
 
-  describe('métodos de alteração', () => {
-    let product: Product;
+  describe('changeName', () => {
+    it('should change name and update updatedAt', () => {
+      const product = makeProduct();
+      const oldUpdatedAt = product.updatedAt;
 
-    beforeEach(() => {
-      product = new Product(
-        validProductData.id,
-        validProductData.name,
-        validProductData.description,
-        validProductData.price,
-        validProductData.categoryId,
-        validProductData.stock,
-        validProductData.image,
-        validProductData.createdAt,
-        validProductData.updatedAt,
+      product.changeName('New name');
+
+      expect(product.name).toBe('New name');
+      expect(product.updatedAt.getTime()).toBeGreaterThan(
+        oldUpdatedAt.getTime(),
       );
     });
 
-    describe('changeName', () => {
-      it('deve alterar o nome do produto', () => {
-        const newName = 'Updated Product Name';
-        product.changeName(newName);
-        expect(product.name).toBe(newName);
-      });
+    it('should throw if name is empty', () => {
+      const product = makeProduct();
 
-      it('deve lançar erro quando nome está vazio', () => {
-        expect(() => product.changeName('')).toThrow('O nome do produto é obrigatório.');
-      });
+      expect(() => product.changeName('')).toThrow(
+        'O nome do produto é obrigatório.',
+      );
+    });
+  });
+
+  describe('changeDescription', () => {
+    it('should change description and update updatedAt', () => {
+      const product = makeProduct();
+      const oldUpdatedAt = product.updatedAt;
+
+      product.changeDescription('New description');
+
+      expect(product.description).toBe('New description');
+      expect(product.updatedAt.getTime()).toBeGreaterThan(
+        oldUpdatedAt.getTime(),
+      );
     });
 
-    describe('changeDescription', () => {
-      it('deve alterar a descrição do produto', () => {
-        const newDescription = 'Updated Product Description';
-        product.changeDescription(newDescription);
-        expect(product.description).toBe(newDescription);
-      });
+    it('should throw if description is empty', () => {
+      const product = makeProduct();
 
-      it('deve lançar erro quando descrição está vazia', () => {
-        expect(() => product.changeDescription('')).toThrow('A descrição do produto é obrigatória.');
-      });
+      expect(() => product.changeDescription('')).toThrow(
+        'A descrição do produto é obrigatória.',
+      );
+    });
+  });
+
+  describe('changePrice', () => {
+    it('should change price and update updatedAt', () => {
+      const product = makeProduct();
+      const oldUpdatedAt = product.updatedAt;
+
+      product.changePrice(200);
+
+      expect(product.price).toBe(200);
+      expect(product.updatedAt.getTime()).toBeGreaterThan(
+        oldUpdatedAt.getTime(),
+      );
     });
 
-    describe('changePrice', () => {
-      it('deve alterar o preço do produto', () => {
-        const newPrice = 149.99;
-        product.changePrice(newPrice);
-        expect(product.price).toBe(newPrice);
-      });
+    it('should throw if price is invalid', () => {
+      const product = makeProduct();
 
-      it('deve lançar erro quando preço é zero ou negativo', () => {
-        expect(() => product.changePrice(0)).toThrow('O preço do produto é obrigatório e deve ser maior que zero.');
-        expect(() => product.changePrice(-10)).toThrow('O preço do produto é obrigatório e deve ser maior que zero.');
-      });
+      expect(() => product.changePrice(0)).toThrow(
+        'O preço do produto é obrigatório e deve ser maior que zero.',
+      );
+    });
+  });
+
+  describe('changeCategoryId', () => {
+    it('should change categoryId and update updatedAt', () => {
+      const product = makeProduct();
+      const oldUpdatedAt = product.updatedAt;
+
+      product.changeCategoryId('new-category-id');
+
+      expect(product.categoryId).toBe('new-category-id');
+      expect(product.updatedAt.getTime()).toBeGreaterThan(
+        oldUpdatedAt.getTime(),
+      );
     });
 
-    describe('changeCategoryId', () => {
-      it('deve alterar o categoryId do produto', () => {
-        const newCategoryId = 'new-category-456';
-        product.changeCategoryId(newCategoryId);
-        expect(product.categoryId).toBe(newCategoryId);
-      });
+    it('should throw if categoryId is empty', () => {
+      const product = makeProduct();
 
-      it('deve lançar erro quando categoryId está vazio', () => {
-        expect(() => product.changeCategoryId('')).toThrow('O ID da categoria é obrigatório.');
-      });
+      expect(() => product.changeCategoryId('')).toThrow(
+        'O ID da categoria é obrigatório.',
+      );
+    });
+  });
+
+  describe('changeStock', () => {
+    it('should change stock and update updatedAt', () => {
+      const product = makeProduct();
+      const oldUpdatedAt = product.updatedAt;
+      const newStock = new ProductStock(5);
+
+      product.changeStock(newStock);
+
+      expect(product.stock).toBe(newStock);
+      expect(product.updatedAt.getTime()).toBeGreaterThan(
+        oldUpdatedAt.getTime(),
+      );
     });
 
-    describe('changeStock', () => {
-      it('deve alterar o estoque do produto', () => {
-        const newStock = new ProductStock(20);
-        product.changeStock(newStock);
-        expect(product.stock).toBe(newStock);
-      });
+    it('should throw if stock is not provided', () => {
+      const product = makeProduct();
 
-      it('deve lançar erro quando estoque é nulo', () => {
-        expect(() => product.changeStock(null as any)).toThrow('O estoque é obrigatório.');
-      });
+      expect(() => product.changeStock(null as any)).toThrow(
+        'O estoque é obrigatório.',
+      );
     });
+  });
 
-    describe('changeImage', () => {
-      it('deve alterar a imagem do produto', () => {
-        const newImage = 'https://example.com/new-image.jpg';
-        product.changeImage(newImage);
-        expect(product.image).toBe(newImage);
-      });
+  describe('changeImage', () => {
+    it('should change image and update updatedAt', () => {
+      const product = makeProduct();
+      const oldUpdatedAt = product.updatedAt;
+
+      product.changeImage('new-image.png');
+
+      expect(product.image).toBe('new-image.png');
+      expect(product.updatedAt.getTime()).toBeGreaterThan(
+        oldUpdatedAt.getTime(),
+      );
     });
   });
 });

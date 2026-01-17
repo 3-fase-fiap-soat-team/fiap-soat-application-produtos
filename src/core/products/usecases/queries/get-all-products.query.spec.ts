@@ -33,11 +33,13 @@ describe('GetAllProductsQuery', () => {
 
   beforeEach(() => {
     mockProductGateway = {
+      dataSource: {} as any,
       save: jest.fn(),
       findAll: jest.fn(),
       findById: jest.fn(),
       findByCategory: jest.fn(),
       delete: jest.fn(),
+      findManyByIds: jest.fn(),
     } as jest.Mocked<ProductGateway>;
   });
 
